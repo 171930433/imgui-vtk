@@ -27,7 +27,7 @@ vtk_module_autoinit(
 
 if(BUILD_EXAMPLE)
   add_executable(imgui_vtk main.cpp)
-  target_link_libraries(imgui_vtk PRIVATE imgui_vtk_viewer glfw_opengl3 ${VTK_LIBRARIES} )
+  target_link_libraries(imgui_vtk PRIVATE imgui_vtk_viewer)
 
   # vtk_module_autoinit(
   #   TARGETS imgui_vtk
