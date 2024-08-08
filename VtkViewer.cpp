@@ -29,7 +29,7 @@
 // OpenGL Loader
 // This can be replaced with another loader, e.g. glad, but
 // remember to change the corresponding initialize call below!
-#include <GL/gl3w.h>            // GL3w, initialized with gl3wInit()
+#include <GL/glew.h>            // GL3w, initialized with gl3wInit()
 
 // Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>

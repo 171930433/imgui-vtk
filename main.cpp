@@ -4,15 +4,15 @@
 // OpenGL Loader
 // This can be replaced with another loader, e.g. glad, but
 // remember to also change the corresponding initialize call!
-#include <GL/gl3w.h>            // GL3w, initialized with gl3wInit() below
+#include <GL/glew.h>            // GL3w, initialized with gl3wInit() below
 
 // Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>
 
 // ImGui + imgui-vtk
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "imgui/backends/imgui_impl_glfw.h"
+#include "imgui/backends/imgui_impl_opengl3.h"
 #include "VtkViewer.h"
 
 // VTK
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
   glfwSwapInterval(1); // Enable vsync
 
   // Initialize OpenGL loader
-  if (gl3wInit() != 0){
+  if (glewInit() != GLEW_OK){
     fprintf(stderr, "Failed to initialize OpenGL loader!\n");
     return 1;
   }
