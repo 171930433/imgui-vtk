@@ -22,6 +22,9 @@
 // File-Specific Includes
 #include "imgui_vtk_demo.h" // Actor generator for this demo
 
+void SetupScene(vtkSmartPointer<vtkRenderer> renderer);
+
+
 static void glfw_error_callback(int error, const char* description)
 {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -87,7 +90,8 @@ int main(int argc, char* argv[])
 
   VtkViewer vtkViewer2;
   vtkViewer2.getRenderer()->SetBackground(0, 0, 0); // Black background
-  vtkViewer2.addActor(actor);
+  // vtkViewer2.addActor(actor);
+  SetupScene(vtkViewer2.getRenderer());
 
   // Our state
   bool show_demo_window = true;
@@ -221,3 +225,4 @@ int main(int argc, char* argv[])
 
   return 0;
 }
+

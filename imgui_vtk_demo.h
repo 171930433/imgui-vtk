@@ -9,7 +9,20 @@
 #include <vtkProperty.h>
 #include <vtkShortArray.h>
 #include <vtkStructuredPoints.h>
+//
+#include <vtkCylinderSource.h>
+#include <vtkSphereSource.h>
+#include <vtkCubeSource.h>
+#include <vtkConeSource.h>
+#include <vtkPlaneSource.h>
+#include <vtkAxesActor.h>
+#include <vtkCaptionActor2D.h>
+#include <vtkTextActor.h>
+#include <vtkTextProperty.h>
+#include <vtkAssembly.h>
 
+// void SetupScene(vtkSmartPointer<vtkRenderer> renderer);
+// void Assemblies(vtkSmartPointer<vtkRenderer> renderer);
 
 static vtkSmartPointer<vtkActor> SetupDemoPipeline()
 {
@@ -53,7 +66,7 @@ static vtkSmartPointer<vtkActor> SetupDemoPipeline()
   auto sliceSize = resolution * resolution;
   auto numPts = sliceSize * resolution;
   auto scalars =
-    vtkSmartPointer<vtkShortArray>::New();
+      vtkSmartPointer<vtkShortArray>::New();
   auto s = scalars->WritePointer(0, numPts);
   for (auto i = 0; i < numPts; i++)
   {
@@ -82,37 +95,128 @@ static vtkSmartPointer<vtkActor> SetupDemoPipeline()
   }
 
   auto colors =
-    vtkSmartPointer<vtkNamedColors>::New();
+      vtkSmartPointer<vtkNamedColors>::New();
 
   auto volume =
-    vtkSmartPointer<vtkStructuredPoints>::New();
+      vtkSmartPointer<vtkStructuredPoints>::New();
   volume->GetPointData()->SetScalars(scalars);
   volume->SetDimensions(resolution, resolution, resolution);
   volume->SetOrigin(xmin, ymin, zmin);
   volume->SetSpacing((xmax - xmin) / resolution, (ymax - ymin) / resolution,
-    (zmax - zmin) / resolution);
+                     (zmax - zmin) / resolution);
 
   printf("  contouring...\n");
 
   // create iso-surface
   auto contour =
-    vtkSmartPointer<vtkContourFilter>::New();
+      vtkSmartPointer<vtkContourFilter>::New();
   contour->SetInputData(volume);
   contour->SetValue(0, 50);
 
   // create mapper
   auto mapper =
-    vtkSmartPointer<vtkPolyDataMapper>::New();
+      vtkSmartPointer<vtkPolyDataMapper>::New();
   mapper->SetInputConnection(contour->GetOutputPort());
   mapper->ScalarVisibilityOff();
 
   // create actor
   auto actor =
-    vtkSmartPointer<vtkActor>::New();
+      vtkSmartPointer<vtkActor>::New();
   actor->SetMapper(mapper);
 #if VTK_MAJOR_VERSION >= 9
   actor->GetProperty()->SetColor(colors->GetColor3d("PaleTurquoise").GetData());
 #endif
 
   return actor;
+}
+
+static void Assemblies(vtkSmartPointer<vtkRenderer> renderer)
+{
+  // sphere
+  vtkNew<vtkSphereSource> sphere;
+  vtkNew<vtkPolyDataMapper> sphere_mapper;
+  sphere_mapper->SetInputConnection(sphere->GetOutputPort());
+  vtkNew<vtkActor> sphere_actor;
+  sphere_actor->SetMapper(sphere_mapper);
+  // sphere_actor->SetOrigin(2, 1, 3);
+  // sphere_actor->RotateY(6);
+  sphere_actor->SetPosition(5, 1, -1);
+  sphere_actor->GetProperty()->SetColor(1, 0, 1);
+
+  // cube
+  vtkNew<vtkCubeSource> cube;
+  vtkNew<vtkPolyDataMapper> cube_mapper;
+  cube_mapper->SetInputConnection(cube->GetOutputPort());
+  vtkNew<vtkActor> cube_actor;
+  cube_actor->SetMapper(cube_mapper);
+  cube_actor->SetPosition(5, 1, 0);
+  cube_actor->GetProperty()->SetColor(0, 0, 1);
+
+  // cone
+  vtkNew<vtkConeSource> cone;
+  vtkNew<vtkPolyDataMapper> cone_mapper;
+  cone_mapper->SetInputConnection(cone->GetOutputPort());
+  vtkNew<vtkActor> cone_actor;
+  cone_actor->SetMapper(cone_mapper);
+  cone_actor->SetPosition(5, 1, 2);
+  cone_actor->GetProperty()->SetColor(0, 1, 0);
+  cone_actor->RotateY(-90);
+
+  // cylinder
+  vtkNew<vtkCylinderSource> cylinder;
+  vtkNew<vtkPolyDataMapper> cylinder_mapper;
+  cylinder_mapper->SetInputConnection(cylinder->GetOutputPort());
+  vtkNew<vtkActor> cylinder_actor;
+  cylinder_actor->SetMapper(cylinder_mapper);
+  cylinder_actor->SetPosition(5, 1, 1);
+  cylinder_actor->RotateX(90);
+  cylinder_actor->GetProperty()->SetColor(1, 0, 0);
+
+  // assembly
+  vtkNew<vtkAssembly> assembly;
+  assembly->AddPart(sphere_actor);
+  assembly->AddPart(cube_actor);
+  assembly->AddPart(cone_actor);
+  assembly->AddPart(cylinder_actor);
+
+  assembly->SetOrigin(5, 10, 15);
+  assembly->AddPosition(5, 0, 0);
+  assembly->RotateX(15);
+
+  renderer->AddActor(assembly);
+  renderer->AddActor(cone_actor);
+}
+
+static void SetupScene(vtkSmartPointer<vtkRenderer> renderer)
+{
+  vtkNew<vtkAxesActor> axes;
+  axes->GetXAxisCaptionActor2D()->GetTextActor()->SetTextScaleModeToNone();
+  axes->GetYAxisCaptionActor2D()->GetTextActor()->SetTextScaleModeToNone();
+  axes->GetZAxisCaptionActor2D()->GetTextActor()->SetTextScaleModeToNone();
+
+  renderer->AddActor(axes);
+
+  // fps
+  vtkNew<vtkTextActor> text_actor;
+  text_actor->SetPosition(10, 10);
+  text_actor->GetTextProperty()->SetColor(1, 1, 1);
+  text_actor->SetInput("FPS:");
+  renderer->AddActor2D(text_actor);
+
+  // xyplane
+  vtkNew<vtkPlaneSource> plane_xy;
+  plane_xy->SetNormal(0, 0, 1);
+  plane_xy->SetCenter(0, 0, 0);
+
+  vtkNew<vtkPolyDataMapper> plane_mapper;
+  plane_mapper->SetInputConnection(plane_xy->GetOutputPort());
+
+  vtkNew<vtkActor> plane_actor;
+  plane_actor->SetMapper(plane_mapper);
+  plane_actor->GetProperty()->SetOpacity(0.2);
+  plane_actor->SetScale(10, 10, 1);
+
+  renderer->AddActor(plane_actor);
+
+  Assemblies(renderer);
 }
